@@ -7,6 +7,9 @@ export default function Calculator() {
     const [result, setResult] = useState("");
     const [history, setHistory] = useState([]);
 
+    // EC2のパブリックIP
+    const API_BASE_URL = "http://3.26.196.49:8080";
+
     // 計算リクエストを送信
     const calculate = async () => {
         if (num1 === "" || num2 === "") {
@@ -14,7 +17,7 @@ export default function Calculator() {
             return;
         }
 
-        const requestUrl = `http://localhost:8080/api/calculate?num1=${num1}&op=${encodeURIComponent(operator)}&num2=${num2}`;
+        const requestUrl = `${API_BASE_URL}/api/calculate?num1=${num1}&op=${encodeURIComponent(operator)}&num2=${num2}`;
         console.log("リクエストURL:", requestUrl);
         console.log("演算子の値:", operator);
 
@@ -31,7 +34,7 @@ export default function Calculator() {
     // 計算履歴を取得
     const fetchHistory = async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/history");
+            const response = await fetch(`${API_BASE_URL}/api/history`);
             const data = await response.json();
             setHistory(data);
         } catch (error) {
