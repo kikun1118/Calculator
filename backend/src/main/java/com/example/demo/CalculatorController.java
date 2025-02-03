@@ -3,34 +3,39 @@ package com.example.demo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000") // Reactと接続
+@CrossOrigin(origins = "*") // すべてのオリジンを許可
 @RestController
 @RequestMapping("/api")
 public class CalculatorController {
 
-    private final List<String> history = new ArrayList<>();
+    private final List<String> history = new LinkedList<>();
 
     @GetMapping("/calculate")
     public ResponseEntity<String> calculate(@RequestParam double num1, 
                                             @RequestParam String op, 
                                             @RequestParam double num2) {
-
-                                                
         double result;
 
-        // op = java.net.URLDecoder.decode(op, StandardCharsets.UTF_8);
+        // URLデコードして `+` や `*` などの特殊文字を正しく処理
+        op = URLDecoder.decode(op, StandardCharsets.UTF_8);
 
         System.out.println("受け取った演算子: " + op);
         try {
             switch (op) {
-                case "+": result = num1 + num2; break;
-                case "-": result = num1 - num2; break;
-                case "*": result = num1 * num2; break;
+                case "+":
+                    result = num1 + num2;
+                    break;
+                case "-":
+                    result = num1 - num2;
+                    break;
+                case "*":
+                    result = num1 * num2;
+                    break;
                 case "/":
                     if (num2 == 0) {
                         return ResponseEntity.badRequest().body("エラー: 0では割れません。");
@@ -45,8 +50,14 @@ public class CalculatorController {
         }
 
         String entry = num1 + " " + op + " " + num2 + " = " + result;
-        history.add(entry);
-        return ResponseEntity.ok("計算結果: " + result);
+        synchronized (history) {
+            if (history.size() >= 10) { // 履歴を最大10件に制限
+                history.remove(0);
+            }
+            history.add(entry);
+        }
+
+        return ResponseEntity.ok(String.valueOf(result));
     }
 
     @GetMapping("/history")
